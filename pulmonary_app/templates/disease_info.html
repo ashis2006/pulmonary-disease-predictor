@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Disease Information - Respida AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-lg-8">
+        <div class="main-card p-5 mt-4" style="max-width: 1000px; width: 100%;">
+            
+            <div class="mb-4">
+                <a href="{{ url_for('predict') }}" class="btn btn-outline-custom btn-sm rounded-pill mb-3 px-3">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to Home
+                </a>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex justify-content-center align-items-center rounded-circle" style="width: 70px; height: 70px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <i class="fa-solid fa-virus-covid text-primary fs-2"></i>
+                    </div>
+                    <div>
+                        <h1 class="fw-bold mb-0 text-dark" style="letter-spacing: -1px;">{{ disease }}</h1>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill">Pulmonary Condition</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="text-muted opacity-25 mb-4">
+
+            <div class="mb-5">
+                <h4 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-file-medical text-primary me-2"></i>Overview</h4>
+                <p class="fs-5 text-muted lh-lg">{{ info.description }}</p>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" style="background: linear-gradient(to right bottom, #f8fafc, #f1f5f9);">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-notes-medical text-danger me-2"></i>Common Symptoms</h5>
+                            <ul class="text-muted ps-3 lh-lg mb-0">
+                                {% if "Asthma" in disease %}
+                                    <li>Shortness of breath</li>
+                                    <li>Chest tightness</li>
+                                    <li>Wheezing when exhaling</li>
+                                    <li>Coughing fits</li>
+                                {% elif "Cancer" in disease %}
+                                    <li>Persistent cough</li>
+                                    <li>Coughing up blood</li>
+                                    <li>Chest pain</li>
+                                    <li>Unexplained weight loss</li>
+                                    <li>Bone pain</li>
+                                {% else %}
+                                    <li>Chronic cough</li>
+                                    <li>Shortness of breath</li>
+                                    <li>Chest pain/tightness</li>
+                                    <li>Fatigue and weakness</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4" style="background: linear-gradient(to right bottom, #f8fafc, #f1f5f9);">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-staff-snake text-success me-2"></i>Treatment Options</h5>
+                            <p class="text-muted lh-lg mb-0">{{ info.treatment }}</p>
+                            
+                            <hr class="opacity-25 my-3">
+                            <h6 class="fw-bold text-dark mb-2">Prevention Tips:</h6>
+                            <ul class="text-muted ps-3 mb-0">
+                                <li>Avoid smoking and secondhand smoke</li>
+                                <li>Minimize exposure to pollutants</li>
+                                <li>Maintain good hand hygiene</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning border-warning-subtle rounded-4 mb-0 text-center">
+                <i class="fa-solid fa-triangle-exclamation mb-2 fs-4"></i><br>
+                <strong>Medical Disclaimer:</strong> This information is for educational purposes only. Always consult a healthcare professional for an accurate diagnosis and treatment plan.
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

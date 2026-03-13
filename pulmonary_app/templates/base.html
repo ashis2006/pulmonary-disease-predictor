@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Respida AI{% endblock %}</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Custom Styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<div class="bg-wrapper"></div>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container-fluid" style="max-width: 1400px;">
+        <button class="navbar-toggler border-0 shadow-none d-block text-primary me-2 flex-shrink-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" style="font-size: 1.5rem;">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <a class="navbar-brand me-auto" href="{% if session.get('username') %}{{ url_for('home') }}{% else %}{{ url_for('login') }}{% endif %}">
+            <i class="fa-solid fa-lungs"></i> Respida
+        </a>
+        <div class="d-flex align-items-center">
+            <button class="nav-link theme-toggle border-0 bg-transparent" id="themeToggle" style="outline:none; font-size: 1.25rem;"><i class="fa-solid fa-moon"></i></button>
+            {% if session.get('username') %}
+                <a href="{{ url_for('profile') }}" class="ms-3 text-primary d-none d-sm-block" style="font-size: 1.5rem;"><i class="fa-solid fa-circle-user"></i></a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Offcanvas Sidebar Menu -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarMenuLabel" style="width: 280px; background: var(--card-bg); backdrop-filter: blur(16px); border-right: 1px solid var(--card-border);">
+    <div class="offcanvas-header border-bottom border-light">
+        <h5 class="offcanvas-title fw-bold" id="sidebarMenuLabel"><i class="fa-solid fa-lungs text-primary me-2"></i> Respida AI</h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+        <div class="list-group list-group-flush mt-3 px-2">
+            {% if session.get('username') %}
+            <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-house me-3 text-primary"></i> Home</a>
+            <a href="{{ url_for('predict') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-microscope me-3 text-primary"></i> Predict</a>
+            <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-chart-pie me-3 text-warning"></i> Dashboard</a>
+            <a href="{{ url_for('history') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-clock-rotate-left me-3 text-info"></i> History</a>
+            <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-user me-3 text-success"></i> User Profile</a>
+            <a href="{{ url_for('about') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-circle-info me-3 text-secondary"></i> About Us</a>
+            {% else %}
+            <a href="{{ url_for('home') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-house me-3 text-primary"></i> Home</a>
+            <a href="{{ url_for('about') }}" class="list-group-item list-group-item-action border-0 mb-1 rounded-3 fw-semibold bg-transparent"><i class="fa-solid fa-circle-info me-3 text-secondary"></i> About Us</a>
+            <div class="mt-4 px-2">
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary w-100 rounded-pill mb-2"><i class="fa-solid fa-right-to-bracket me-2"></i> Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary-custom w-100 rounded-pill"><i class="fa-solid fa-user-plus me-2"></i> Register</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="mt-auto p-3 border-top border-light">
+            {% if session.get('username') %}
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 rounded-pill"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a>
+            {% endif %}
+            <div class="text-center mt-3 small text-muted">
+                Respida AI &copy; 2026
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating AI Assistant -->
+<div class="position-fixed bottom-0 end-0 p-4" style="z-index: 1050;">
+    <button id="chatbotToggle" class="btn btn-primary-custom rounded-circle shadow-lg d-flex align-items-center justify-content-center border-0" style="width: 65px; height: 65px; background: linear-gradient(135deg, #3b82f6, #6366f1); transition: transform 0.3s;">
+        <i class="fa-solid fa-robot fs-3 text-white"></i>
+    </button>
+</div>
+
+<!-- Chatbot Window -->
+<div id="chatbotWindow" class="card shadow-lg border-0 d-none" style="position: fixed; bottom: 100px; right: 30px; width: 360px; height: 520px; z-index: 1050; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; background: var(--card-bg); transition: all 0.3s ease;">
+    <!-- Header -->
+    <div class="p-3 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
+        <div class="d-flex align-items-center">
+            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                <i class="fa-solid fa-robot fs-5"></i>
+            </div>
+            <div>
+                <h6 class="m-0 fw-bold" style="font-size: 1rem;">Respida AI</h6>
+                <small class="text-white-50" style="font-size: 0.75rem;">Online &bull; Intelligent Assistant</small>
+            </div>
+        </div>
+        <button id="closeChatbot" class="btn text-white shadow-none fs-5 p-0 bg-transparent border-0"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <!-- Chat Body -->
+    <div id="chatbotBody" class="p-3 flex-grow-1" style="overflow-y: auto; background: var(--input-bg); display: flex; flex-direction: column; gap: 15px;">
+        <!-- Bot Message -->
+        <div class="d-flex align-items-start gap-2 w-100">
+            <div class="bg-primary text-white p-3 shadow-sm" style="border-radius: 15px; border-top-left-radius: 2px; font-size: 0.95rem; max-width: 85%;">
+                👋 Hello! I am Respida AI. I can answer questions about respiratory health or guide you on how to use our prediction tools. How can I help?
+            </div>
+        </div>
+    </div>
+    
+    <!-- Typing Indicator (Hidden by default) -->
+    <div id="chatbotTyping" class="px-3 pb-2 text-muted small d-none" style="background: var(--input-bg);">
+        <i class="fa-solid fa-circle text-primary" style="font-size: 6px; animation: blink 1.4s infinite;"></i>
+        <i class="fa-solid fa-circle text-primary mx-1" style="font-size: 6px; animation: blink 1.4s infinite 0.2s;"></i>
+        <i class="fa-solid fa-circle text-primary" style="font-size: 6px; animation: blink 1.4s infinite 0.4s;"></i>
+        Respida is typing...
+    </div>
+
+    <!-- Chat Input -->
+    <div class="p-3 border-top d-flex gap-2 align-items-center" style="background: var(--card-bg); border-color: var(--card-border) !important;">
+        <input type="text" id="chatbotInput" class="form-control rounded-pill shadow-none border-secondary text-dark px-3 py-2" placeholder="Message Respida AI..." style="font-size: 0.95rem; background: var(--input-bg); color: var(--text-color) !important;">
+        <button id="chatbotSend" class="btn btn-primary rounded-circle shadow border-0 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; min-width: 42px; background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
+            <i class="fa-solid fa-paper-plane text-white"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+@keyframes blink { 0%, 100% { opacity: 0.2; } 20% { opacity: 1; } }
+</style>
+
+<div class="container-fluid px-4 px-lg-5 mt-5 fade-in mb-5" style="max-width: 1600px;">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show alert-custom mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if category == 'error' %}<i class="fa-solid fa-circle-exclamation fs-4 me-3"></i>{% endif %}
+                        {% if category == 'warning' %}<i class="fa-solid fa-triangle-exclamation fs-4 me-3"></i>{% endif %}
+                        {% if category == 'success' %}<i class="fa-solid fa-circle-check fs-4 me-3"></i>{% endif %}
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close mt-1" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}
+    {% endblock %}
+</div>
+
+<footer>
+    © 2026 Respida AI | Intelligent Pulmonary Health Assistant &nbsp;<i class="fa-solid fa-heart text-danger"></i>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggle1 = document.getElementById("themeToggle");
+        const toggle2 = document.getElementById("themeToggle2");
+        const body = document.body;
+        
+        function updateToggleIcon() {
+            const isDark = body.getAttribute("data-theme") === "dark";
+            const html = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+            if (toggle1) toggle1.innerHTML = html;
+        }
+
+        if(localStorage.getItem("theme") === "dark") {
+            body.setAttribute("data-theme", "dark");
+            updateToggleIcon();
+        }
+        
+        function toggleTheme() {
+            if (body.getAttribute("data-theme") === "dark") {
+                body.removeAttribute("data-theme");
+                localStorage.setItem("theme", "light");
+            } else {
+                body.setAttribute("data-theme", "dark");
+                localStorage.setItem("theme", "dark");
+            }
+            updateToggleIcon();
+        }
+
+        if(toggle1) toggle1.addEventListener("click", toggleTheme);
+
+        // Chatbot Functionality
+        const chatbotToggle = document.getElementById("chatbotToggle");
+        const chatbotWindow = document.getElementById("chatbotWindow");
+        const closeChatbot = document.getElementById("closeChatbot");
+        const chatbotInput = document.getElementById("chatbotInput");
+        const chatbotSend = document.getElementById("chatbotSend");
+        const chatbotBody = document.getElementById("chatbotBody");
+        const chatbotTyping = document.getElementById("chatbotTyping");
+
+        if(chatbotToggle && chatbotWindow) {
+            chatbotToggle.addEventListener("click", () => {
+                chatbotWindow.classList.toggle("d-none");
+                if(!chatbotWindow.classList.contains("d-none")) {
+                    chatbotInput.focus();
+                }
+            });
+
+            closeChatbot.addEventListener("click", () => {
+                chatbotWindow.classList.add("d-none");
+            });
+
+            function appendMessage(text, isUser=false) {
+                const wrapper = document.createElement("div");
+                wrapper.className = `d-flex align-items-start gap-2 w-100 ${isUser ? 'justify-content-end' : ''}`;
+                
+                const bubble = document.createElement("div");
+                bubble.className = "p-3 shadow-sm";
+                bubble.style.fontSize = "0.95rem";
+                bubble.style.maxWidth = "85%";
+                bubble.innerHTML = text; // allow bolding, etc.
+                
+                if(isUser) {
+                    bubble.style.borderRadius = "15px 15px 2px 15px";
+                    bubble.style.background = "linear-gradient(135deg, #0f172a, #334155)";
+                    bubble.className += " text-white bg-dark";
+                } else {
+                    bubble.style.borderRadius = "15px 15px 15px 2px";
+                    bubble.style.background = "linear-gradient(135deg, #3b82f6, #8b5cf6)";
+                    bubble.className += " text-white bg-primary";
+                }
+                
+                wrapper.appendChild(bubble);
+                chatbotBody.appendChild(wrapper);
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+            }
+
+            function processBotResponse(userInput) {
+                chatbotTyping.classList.remove("d-none");
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+                
+                const query = userInput.toLowerCase();
+                let reply = "I'm still learning and might not have the answer to that. For a full medical evaluation, please use our <b>Predict</b> page to analyze your symptoms!";
+                
+                if (query.match(/\b(hi|hello|hey|greetings)\b/)) {
+                    reply = "Hello there! How can I assist you with your respiratory concerns today?";
+                } else if (query.includes("cough")) {
+                    reply = "A cough can be caused by various factors including infections, asthma, or allergies. We have a dedicated <b>Audio Analysis Engine</b> on our Predict page that can evaluate your cough sound pattern using AI.";
+                } else if (query.includes("asthma")) {
+                    reply = "Asthma often presents with wheezing, shortness of breath, and chest tightness. However, I can't diagnose it directly. Check your symptoms in our diagnostic tool!";
+                } else if (query.includes("symptom") || query.includes("test") || query.includes("predict")) {
+                    reply = "You can run a full AI diagnostic by navigating to our <b>Predict Dashboard</b> in the menu. Just select your symptoms and their severity.";
+                } else if (query.includes("doctor") || query.includes("hospital") || query.includes("emergency")) {
+                    reply = "If you're having an emergency, dial emergency services immediately! Otherwise, you can view top-rated local Pulmonologists directly on our Home page.";
+                } else if (query.includes("who are you") || query.includes("what is respida")) {
+                    reply = "I am Respida AI, an intelligent assistant designed to help you navigate this platform and answer basic queries about respiratory symptoms.";
+                }
+
+                setTimeout(() => {
+                    chatbotTyping.classList.add("d-none");
+                    appendMessage(reply, false);
+                }, Math.random() * 1000 + 800);
+            }
+
+            chatbotSend.addEventListener("click", () => {
+                const text = chatbotInput.value.trim();
+                if(text) {
+                    appendMessage(text, true);
+                    chatbotInput.value = "";
+                    processBotResponse(text);
+                }
+            });
+
+            chatbotInput.addEventListener("keypress", (e) => {
+                if(e.key === "Enter") {
+                    chatbotSend.click();
+                }
+            });
+        }
+    });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

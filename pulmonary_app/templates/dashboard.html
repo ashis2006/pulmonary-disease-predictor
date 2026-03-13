@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Respida AI{% endblock %}
+
+{% block content %}
+<div class="main-card fade-in mx-auto" style="max-width: 1400px; width: 100%;">
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark">Health Analytics Dashboard 📊</h2>
+        <p class="text-muted">A comprehensive overview of recent pulmonary assessments and symptomatic trends.</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Predicted Diseases Chart -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold text-secondary mb-4"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Predicted Diseases Distribution</h5>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="diseaseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Common Symptoms Chart -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold text-secondary mb-4"><i class="fa-solid fa-chart-pie text-warning me-2"></i>Most Common Symptoms</h5>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="symptomChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prediction Timeline Chart -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold text-secondary mb-4"><i class="fa-solid fa-chart-line text-success me-2"></i>Prediction Timeline</h5>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const diseaseLabels = {{ disease_labels | tojson }};
+const diseaseValues = {{ disease_values | tojson }};
+
+const symptomLabels = {{ symptom_labels | tojson }};
+const symptomValues = {{ symptom_values | tojson }};
+
+const timelineLabels = {{ timeline_labels | tojson }};
+const timelineValues = {{ timeline_values | tojson }};
+
+// Chart Defaults
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#64748b';
+
+// Disease Chart
+const ctxDisease = document.getElementById("diseaseChart").getContext("2d");
+let gradientBlue = ctxDisease.createLinearGradient(0, 0, 0, 400);
+gradientBlue.addColorStop(0, '#c026d3');
+gradientBlue.addColorStop(1, '#3b82f6');
+
+new Chart(ctxDisease, {
+    type: "bar",
+    data: {
+        labels: diseaseLabels,
+        datasets: [{
+            label: "Occurrences",
+            data: diseaseValues,
+            backgroundColor: gradientBlue,
+            borderColor: '#8b5cf6',
+            borderWidth: 1,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+
+// Symptom Chart
+new Chart(document.getElementById("symptomChart"), {
+    type: "doughnut",
+    data: {
+        labels: symptomLabels,
+        datasets: [{
+            data: symptomValues,
+            backgroundColor: [
+                '#c026d3', '#3b82f6', '#06b6d4', '#10b981', 
+                '#f59e0b', '#f97316', '#ef4444', '#8b5cf6'
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right' }
+        }
+    }
+});
+
+// Timeline Chart
+const ctxTimeline = document.getElementById("timelineChart").getContext("2d");
+let gradientTeal = ctxTimeline.createLinearGradient(0, 0, 0, 400);
+gradientTeal.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+gradientTeal.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+new Chart(ctxTimeline, {
+    type: "line",
+    data: {
+        labels: timelineLabels,
+        datasets: [{
+            label: "Assessments",
+            data: timelineValues,
+            borderColor: '#06b6d4',
+            backgroundColor: gradientTeal,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#06b6d4',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+</script>
+{% endblock %}

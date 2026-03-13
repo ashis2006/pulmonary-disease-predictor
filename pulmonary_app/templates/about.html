@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}About Us - Respida AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-md-9 col-lg-8">
+        <div class="main-card px-5 py-5 mt-4 text-center">
+            
+            <div class="mb-5">
+                <i class="fa-solid fa-lungs text-primary mb-3" style="font-size: 5rem; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4));"></i>
+                <h1 class="fw-bold display-5">About Respida AI</h1>
+                <p class="fs-5 text-secondary mt-3">An intelligent, robust, and accessible pulmonary disease prediction platform.</p>
+            </div>
+            
+            <div class="text-start mb-5">
+                <h3 class="fw-bold border-bottom pb-2 mb-3 text-primary"><i class="fa-solid fa-bullseye me-2"></i> Our Purpose</h3>
+                <p class="text-muted" style="line-height: 1.8;">
+                    Respida AI is designed to assist individuals in identifying potential respiratory illnesses early through a combination of reported symptoms and advanced diagnostic machine learning, including cough audio analysis engines. The overarching goal is to bridge the gap between initial symptomatic onset and seeking professional clinical evaluation, ensuring users can proactively monitor their lung health.
+                </p>
+            </div>
+            
+            <div class="text-start mb-5">
+                <h3 class="fw-bold border-bottom pb-2 mb-4 text-primary"><i class="fa-solid fa-microchip me-2"></i> Technologies Used</h3>
+                <div class="row g-4 justify-content-center">
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 rounded-4 h-100 text-center shadow-sm">
+                            <div class="card-body">
+                                <i class="fa-brands fa-python text-primary fs-1 mb-3"></i>
+                                <h6 class="fw-bold m-0">Python & Flask</h6>
+                                <p class="small text-muted mt-2">Robust backend server architecture and API routing.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 rounded-4 h-100 text-center shadow-sm">
+                            <div class="card-body">
+                                <i class="fa-solid fa-brain text-purple fs-1 mb-3" style="color: #c026d3;"></i>
+                                <h6 class="fw-bold m-0">Machine Learning</h6>
+                                <p class="small text-muted mt-2">SciKit-Learn & Librosa audio pattern logic networks.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 rounded-4 h-100 text-center shadow-sm">
+                            <div class="card-body">
+                                <i class="fa-brands fa-js text-warning fs-1 mb-3"></i>
+                                <h6 class="fw-bold m-0">JavaScript & SQLite/MongoDB</h6>
+                                <p class="small text-muted mt-2">Dynamic DOM manipulation and persistent data storage.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-custom alert-danger border border-danger text-start">
+                <div class="d-flex">
+                    <i class="fa-solid fa-triangle-exclamation fs-3 me-3 text-danger"></i>
+                    <div>
+                        <h5 class="fw-bold text-danger m-0 mb-1">Medical Disclaimer</h5>
+                        <p class="m-0 text-muted small" style="line-height: 1.5;">
+                            This platform and its AI predictions are <strong>NOT</strong> a substitute for professional medical diagnosis, treatment, or advice. The results provided are for educational and informational purposes only based on aggregated health statistics. If you are experiencing a medical emergency, severe chest pain, or extreme difficulty breathing, please dial emergency services immediately and consult a certified healthcare professional.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

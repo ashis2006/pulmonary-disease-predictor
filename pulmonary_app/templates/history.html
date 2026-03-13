@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Assessment History - Respida AI{% endblock %}
+
+{% block content %}
+<div class="main-card fade-in mx-auto" style="max-width: 1400px; width: 100%;">
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark"><i class="fa-solid fa-clock-rotate-left"></i> Assessment History</h2>
+        <p class="text-muted">Review your past predictions and symptom logs.</p>
+    </div>
+
+    {% if history %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle border">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="py-3 px-4 rounded-start-2">Date & Time</th>
+                    <th scope="col" class="py-3">Top Prediction(s)</th>
+                    <th scope="col" class="py-3 px-4 rounded-end-2">Symptom Log</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                {% for row in history %}
+                <tr>
+                    <td class="px-4 text-nowrap text-secondary fw-medium">
+                        <i class="fa-regular fa-calendar text-muted"></i> {{ row.timestamp[:10] }}<br>
+                        <small class="text-muted"><i class="fa-regular fa-clock"></i> {{ row.timestamp[11:] }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                            {{ row.prediction }}
+                        </span>
+                    </td>
+                    <td class="px-4">
+                        {% set symps = row.symptoms.split(',') %}
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for s in symps %}
+                                {% if ':1' in s %}
+                                    <span class="badge bg-light text-dark border fw-normal">{{ s.split(':')[0].replace('_',' ').title() }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <div class="display-1 text-muted opacity-25 mb-4"><i class="fa-solid fa-folder-open"></i></div>
+        <h4 class="text-secondary fw-bold">No History Found</h4>
+        <p class="text-muted">You haven't completed any assessments yet.</p>
+        <a href="{{ url_for('predict') }}" class="btn btn-primary-custom mt-3">Start Assessment</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

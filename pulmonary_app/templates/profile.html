@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}User Profile - Respida AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-md-8 col-lg-6">
+        <div class="main-card px-4 py-5 mt-4">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex justify-content-center align-items-center mb-4" style="width: 100px; height: 100px; border-radius: 50px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1)); border: 2px solid rgba(139, 92, 246, 0.4);">
+                    <i class="fa-solid fa-user text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h2 class="fw-bold">{{ username }}'s Profile</h2>
+            </div>
+            
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user-astronaut"></i></span>
+                        <input type="text" class="form-control" name="username" value="{{ username }}" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                        <input type="email" class="form-control" name="email" value="{{ email }}">
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Age</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-calendar-days"></i></span>
+                            <input type="number" class="form-control" name="age" value="{{ age }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-4 mt-md-0">
+                        <label class="form-label fw-bold small text-uppercase text-secondary">Gender</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa-solid fa-venus-mars"></i></span>
+                            <select class="form-select" name="gender">
+                                <option value="" {% if not gender %}selected{% endif %}>Not Specified</option>
+                                <option value="Male" {% if gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if gender == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-5">
+                    <label class="form-label fw-bold small text-uppercase text-secondary">Smoking History</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-smoking"></i></span>
+                        <select class="form-select" name="smoking">
+                            <option value="" {% if not smoking %}selected{% endif %}>Not Specified</option>
+                            <option value="Never" {% if smoking == 'Never' %}selected{% endif %}>Never Smoked</option>
+                            <option value="Former" {% if smoking == 'Former' %}selected{% endif %}>Former Smoker</option>
+                            <option value="Current" {% if smoking == 'Current' %}selected{% endif %}>Current Smoker</option>
+                        </select>
+                    </div>
+                    <div class="form-text text-muted mt-2">Update your most recent biological profile status.</div>
+                </div>
+                
+                <div class="d-flex flex-column gap-3 mt-4 border-top pt-4">
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Save Profile
+                    </button>
+                    <!-- Provide a quick note about password changes -->
+                    <p class="text-muted text-center small m-0"><i class="fa-solid fa-circle-info"></i> Contact support to update encrypted passwords or modify health history.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

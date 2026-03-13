@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Home - Respida AI{% endblock %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12 mb-4">
+        <div class="main-card py-5 text-center text-white text-md-start" style="background: linear-gradient(135deg, #3b82f6, #6366f1); border: none;">
+            <div class="row align-items-center">
+                <div class="col-md-8 px-5">
+                    <h1 class="fw-bold display-4 mb-3">Welcome to Respida AI</h1>
+                    <p class="fs-4 fw-light mb-4">Your Intelligent Pulmonary Health Assistant</p>
+                    <a href="{{ url_for('predict') }}" class="btn btn-light btn-lg rounded-pill fw-bold text-primary shadow-sm px-5 py-3">
+                        <i class="fa-solid fa-microscope me-2"></i> Start Prediction <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                <div class="col-md-4 text-center mt-4 mt-md-0">
+                    <i class="fa-solid fa-lungs text-white opacity-50" style="font-size: 8rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 fade-in">
+    <div class="col-md-4">
+        <a href="{{ url_for('predict') }}" class="text-decoration-none h-100">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-start transition-all hover-lift" style="cursor: pointer;">
+                <div class="card-body p-4 d-flex flex-column align-items-start">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle mb-3">
+                        <i class="fa-solid fa-microscope text-primary fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Predict Disease</h5>
+                    <p class="text-muted small">Run an AI-powered diagnostic based on symptoms and audio analysis.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('dashboard') }}" class="text-decoration-none h-100">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-start transition-all hover-lift" style="cursor: pointer;">
+                <div class="card-body p-4 d-flex flex-column align-items-start">
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle mb-3">
+                        <i class="fa-solid fa-chart-pie text-warning fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">View Dashboard</h5>
+                    <p class="text-muted small">Analyze predicted diseases and symptom distributions via interactive charts.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('history') }}" class="text-decoration-none h-100">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-start transition-all hover-lift" style="cursor: pointer;">
+                <div class="card-body p-4 d-flex flex-column align-items-start">
+                    <div class="bg-info bg-opacity-10 p-3 rounded-circle mb-3">
+                        <i class="fa-solid fa-clock-rotate-left text-info fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">View History</h5>
+                    <p class="text-muted small">Access your previous pulmonary assessment history logs securely.</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mt-2 fade-in">
+    <div class="col-lg-8">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-hospital text-danger me-2"></i> Nearby Hospitals</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 text-start bg-white h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold"><i class="fa-solid fa-square-h text-danger me-2"></i> Apollo Hospital</h6>
+                        <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i> 1.2 km away</p>
+                        <p class="text-warning mb-3 small"><i class="fa-solid fa-star"></i> 4.5 Rating</p>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=Apollo+Hospital" target="_blank" class="btn btn-outline-primary btn-sm w-100 rounded-pill">Get Directions</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 text-start bg-white h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold"><i class="fa-solid fa-square-h text-danger me-2"></i> Metro Pulmonology</h6>
+                        <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i> 2.8 km away</p>
+                        <p class="text-warning mb-3 small"><i class="fa-solid fa-star"></i> 4.8 Rating</p>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=Metro+Pulmonology" target="_blank" class="btn btn-outline-primary btn-sm w-100 rounded-pill">Get Directions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-leaf text-success me-2"></i> Respiratory Health Tips</h5>
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(6, 182, 212, 0.05));">
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-3 text-secondary">
+                <li><i class="fa-solid fa-ban-smoking text-danger me-3 fs-5 align-middle"></i> Avoid smoking completely</li>
+                <li><i class="fa-solid fa-person-running text-success me-3 fs-5 align-middle"></i> Exercise regularly</li>
+                <li><i class="fa-solid fa-mask-face text-info me-3 fs-5 align-middle"></i> Wear masks in polluted areas</li>
+                <li><i class="fa-solid fa-glass-water text-primary me-3 fs-5 align-middle"></i> Stay hydrated</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+</style>
+{% endblock %}

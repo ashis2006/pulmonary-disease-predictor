@@ -1,0 +1,866 @@
+{% extends "base.html" %}
+{% block title %}Predict - Respida AI{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Custom styled checkboxes */
+.symptom-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 15px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+}
+
+.symptom-card:hover {
+    border-color: #6366f1;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.1);
+}
+
+.form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-top: 0;
+    cursor: pointer;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+.form-check-input:checked ~ .symptom-card {
+    border-color: #4f46e5;
+    background: #eff6ff;
+}
+
+.symptom-label {
+    cursor: pointer;
+    margin: 0;
+    flex-grow: 1;
+    font-size: 15px;
+}
+
+.section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.icon-resp { background: #dbeafe; color: #2563eb; }
+.icon-gen { background: #fef3c7; color: #d97706; }
+.icon-sev { background: #fee2e2; color: #dc2626; }
+
+/* Result Badges */
+.risk-High {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-weight: 600;
+    display: inline-block;
+}
+.risk-Medium {
+    background: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fde68a;
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-weight: 600;
+    display: inline-block;
+}
+.risk-Low {
+    background: #ecfdf5;
+    color: #10b981;
+    border: 1px solid #a7f3d0;
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* Prediction Result Cards */
+.top-prediction-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-left: 5px solid #6366f1;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.alt-prediction {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+[data-theme="dark"] .top-prediction-card {
+    background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+}
+
+[data-theme="dark"] .alt-prediction {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .risk-High {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+    color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .risk-Medium {
+    background: rgba(245, 158, 11, 0.2) !important;
+    border-color: #f59e0b !important;
+    color: #fcd34d !important;
+}
+
+[data-theme="dark"] .risk-Low {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border-color: #10b981 !important;
+    color: #6ee7b7 !important;
+}
+
+[data-theme="dark"] .body-map-container,
+[data-theme="dark"] .body-map-bg-wrapper {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .progress-custom {
+    background: #334155 !important;
+}
+
+.progress-custom {
+    height: 10px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    margin-top: 5px;
+}
+.progress-bar-custom {
+    background: linear-gradient(90deg, #6366f1, #2563eb);
+    border-radius: 10px;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8fafc;
+    color: #2563eb;
+    box-shadow: none;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if prediction %}
+<!-- Loading Animation -->
+<div id="loading-animation" class="main-card fade-in mx-auto text-center py-5" style="max-width: 800px; width: 100%;">
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status"></div>
+    <h3 class="mt-4 fw-bold">Analyzing symptoms...</h3>
+    <h5 class="text-muted fade-in-slow">🫁 AI Diagnosis Running...</h5>
+</div>
+
+<!-- RESULTS VIEW -->
+<div id="results-view" class="main-card mx-auto d-none" style="max-width: 1400px; width: 100%;">
+    
+    {% if prediction == "Insufficient Symptoms" %}
+        <div class="text-center mb-4">
+            <h2 class="text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Assessment Incomplete</h2>
+            <p class="text-muted lead mt-3">{{ description }}</p>
+        </div>
+        
+        <div class="alert alert-warning text-center">
+            <i class="fa-solid fa-stethoscope"></i> {{ treatment }}
+        </div>
+    {% else %}
+        <div class="text-center mb-4">
+            <div class="badge bg-primary px-3 py-2 mb-3 rounded-pill">
+                <i class="fa-solid fa-robot"></i> AI Analysis Complete
+            </div>
+            <h2>Primary Assessment</h2>
+            <p class="text-muted">Based on your symptoms and profile, here are the most likely conditions.</p>
+        </div>
+
+        <!-- Top 1 Prediction -->
+        <div class="top-prediction-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <a href="{{ url_for('disease_info', disease_name=(top3[0].disease if top3 else prediction)) }}" class="text-primary text-decoration-none text-opacity-100 fw-bold m-0" style="font-size: 1.75rem;">
+                    {{ top3[0].disease if top3 else prediction }} <i class="fa-solid fa-circle-info fs-5 ms-2 text-info align-middle"></i>
+                </a>
+                <span class="risk-{{ risk_level.split(' ')[0] }}">{{ risk_level }}</span>
+            </div>
+            <p class="fs-4 fw-light text-secondary mb-3">
+                <i class="fa-solid fa-bullseye text-primary"></i> Confidence: <strong>{{ confidence }}%</strong>
+            </p>
+            
+            {% if description %}
+                <div class="mb-3">
+                    <h5 class="fw-bold"><i class="fa-solid fa-book-medical"></i> Overview</h5>
+                    <p class="text-muted">{{ description }}</p>
+                </div>
+            {% endif %}
+
+            {% if treatment %}
+                <div class="mb-3">
+                    <h5 class="fw-bold"><i class="fa-solid fa-prescription-bottle-medical"></i> Recommendations</h5>
+                    <p class="text-muted">{{ treatment }}</p>
+                </div>
+            {% endif %}
+            
+            <hr>
+            <p class="m-0 text-muted">
+                <i class="fa-solid fa-user-doctor"></i> Suggested Specialist: <strong class="text-dark">{{ specialist }}</strong>
+            </p>
+        </div>
+
+        <!-- Top 2 & 3 Alternative Predictions -->
+        {% if top3|length > 1 %}
+        <h5 class="fw-bold mb-3 mt-5">Alternative Possibilities</h5>
+        <div class="row">
+            {% for alt in top3[1:] %}
+            <div class="col-md-6 mb-3">
+                <div class="alt-prediction h-100">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">{{ alt.disease }}</span>
+                        <span class="text-primary fw-bold">{{ alt.probability }}%</span>
+                    </div>
+                    <div class="progress progress-custom">
+                        <div class="progress-bar progress-bar-custom" role="progressbar" style="width: {{ alt.probability }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if selected_symptoms %}
+            <div class="mt-4 p-4 bg-light rounded-4 border">
+                <h6 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-list-check"></i> Symptoms Analyzed</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for s in selected_symptoms %}
+                    <span class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-sm">
+                        {{ s.replace('_',' ').title() }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="mt-5">
+            <h5 class="fw-bold mb-3 text-center"><i class="fa-solid fa-hospital"></i> Medical Facilities Near You</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 text-start">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold"><i class="fa-solid fa-square-h text-danger me-2"></i> Apollo Hospital</h5>
+                            <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i> 1.2 km away</p>
+                            <p class="text-warning mb-3"><i class="fa-solid fa-star"></i> 4.5 Rating</p>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=Apollo+Hospital" target="_blank" class="btn btn-outline-primary w-100 rounded-pill btn-sm">Get Directions</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 text-start">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold"><i class="fa-solid fa-square-h text-danger me-2"></i> Metro Pulmonology</h5>
+                            <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i> 2.8 km away</p>
+                            <p class="text-warning mb-3"><i class="fa-solid fa-star"></i> 4.8 Rating</p>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=Metro+Pulmonology" target="_blank" class="btn btn-outline-primary w-100 rounded-pill btn-sm">Get Directions</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 text-start">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold"><i class="fa-solid fa-square-h text-danger me-2"></i> City Care Clinic</h5>
+                            <p class="text-muted small mb-2"><i class="fa-solid fa-location-dot me-2"></i> 4.5 km away</p>
+                            <p class="text-warning mb-3"><i class="fa-solid fa-star"></i> 4.2 Rating</p>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=City+Care+Clinic" target="_blank" class="btn btn-outline-primary w-100 rounded-pill btn-sm">Get Directions</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rounded-4 overflow-hidden border shadow-sm mt-4">
+                <iframe
+                    width="100%"
+                    height="350"
+                    style="border:0"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://www.google.com/maps?q=hospitals+or+pulmonologist+near+me&output=embed">
+                </iframe>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mt-5">
+        <a href="{{ url_for('predict') }}" class="btn btn-outline-custom">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Start New Assessment
+        </a>
+        {% if prediction != "Insufficient Symptoms" %}
+        <a href="{{ url_for('download_report') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF Report
+        </a>
+        {% endif %}
+    </div>
+
+</div>
+
+{% else %}
+<!-- INTAKE FORM VIEW -->
+<div class="main-card mx-auto" style="max-width: 1400px; width: 100%;">
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark">Symptom Assessment 🫁</h2>
+        <p class="text-muted">Fill out your profile and select any symptoms you are experiencing for an AI-powered evaluation.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('predict') }}">
+
+        <!-- Patient Profile -->
+        <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2">1. Patient Profile</h5>
+        <div class="row mb-4 g-3">
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-semibold">Age</label>
+                <input type="number" class="form-control form-control-lg bg-light" name="age" placeholder="e.g. 45" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-semibold">Gender</label>
+                <select class="form-select form-select-lg bg-light" name="gender" required>
+                    <option value="">Select...</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-semibold">Height (cm)</label>
+                <input type="number" class="form-control form-control-lg bg-light" name="height" placeholder="e.g. 175" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted fw-semibold">Weight (kg)</label>
+                <input type="number" class="form-control form-control-lg bg-light" name="weight" placeholder="e.g. 70" required>
+            </div>
+        </div>
+
+        <!-- Added Profile Options -->
+        <div class="row mb-5 g-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-semibold">Smoking Status</label>
+                <select class="form-select bg-light" name="smoking_status">
+                    <option value="Never">Never Smoked</option>
+                    <option value="Former">Former Smoker</option>
+                    <option value="Current">Current Smoker</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-semibold">Environmental Exposure</label>
+                <select class="form-select bg-light" name="environmental_exposure">
+                    <option value="No">No (Clean Environment)</option>
+                    <option value="Yes">Yes (Pollution / Chemical / Dust)</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-semibold">Previous Lung Conditions</label>
+                <input type="text" class="form-control bg-light" name="previous_conditions" placeholder="e.g. Asthma, None">
+            </div>
+        </div>
+
+        <!-- Symptoms Selection -->
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h5 class="fw-bold text-secondary m-0">2. Select Symptoms</h5>
+            <div class="input-group w-auto">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" id="symptomSearch" class="form-control border-start-0" placeholder="Search symptoms...">
+            </div>
+        </div>
+        
+        <!-- Interactive Body Map -->
+        <div class="body-map-container mb-4 p-4 bg-white rounded-4 shadow-sm border" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <div class="text-center mb-3">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-person-dots-from-line text-primary"></i> Interactive Body Map</h5>
+                <p class="small text-muted">Click on a region to highlight related symptoms below.</p>
+            </div>
+            
+            <div class="d-flex justify-content-center">
+                <div class="position-relative body-map-bg-wrapper" style="width: 140px; height: 280px; background: #e2e8f0; border-radius: 70px; border: 3px solid #cbd5e1; box-shadow: inset 0 0 15px rgba(0,0,0,0.05);">
+                    <!-- Head -->
+                    <div class="body-region head-region" data-region="head" style="position: absolute; top: 4%; left: 25%; width: 50%; height: 18%; border-radius: 50%; background: rgba(59, 130, 246, 0.15); cursor: pointer; transition: 0.3s; border: 2px solid transparent;" onclick="filterSymptoms('head', this)">
+                        <span class="position-absolute w-100 text-center fw-bold text-primary" style="top: 50%; transform: translateY(-50%); font-size: 0.7rem;">Head</span>
+                    </div>
+                    <!-- Throat -->
+                    <div class="body-region throat-region" data-region="throat" style="position: absolute; top: 23%; left: 35%; width: 30%; height: 8%; border-radius: 20px; background: rgba(59, 130, 246, 0.15); cursor: pointer; transition: 0.3s; border: 2px solid transparent;" onclick="filterSymptoms('throat', this)">
+                        <span class="position-absolute w-100 text-center fw-bold text-primary" style="top: 50%; transform: translateY(-50%); font-size: 0.6rem;">Throat</span>
+                    </div>
+                    <!-- Chest -->
+                    <div class="body-region chest-region" data-region="chest" style="position: absolute; top: 32%; left: 15%; width: 70%; height: 25%; border-radius: 30px; background: rgba(59, 130, 246, 0.15); cursor: pointer; transition: 0.3s; border: 2px solid transparent;" onclick="filterSymptoms('chest', this)">
+                        <span class="position-absolute w-100 text-center fw-bold text-primary" style="top: 50%; transform: translateY(-50%); font-size: 0.75rem;">Chest</span>
+                    </div>
+                    <!-- General -->
+                    <div class="body-region general-region" data-region="general" style="position: absolute; top: 59%; left: 15%; width: 70%; height: 35%; border-radius: 30px; background: rgba(59, 130, 246, 0.15); cursor: pointer; transition: 0.3s; border: 2px solid transparent;" onclick="filterSymptoms('general', this)">
+                        <span class="position-absolute w-100 text-center fw-bold text-primary" style="top: 50%; transform: translateY(-50%); font-size: 0.7rem;">Systemic</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-4 shadow-sm" onclick="resetSymptomFilter()">Show All Symptoms</button>
+            </div>
+        </div>
+        
+        <p class="small text-muted mb-4">Please select all that apply to get the most accurate result.</p>
+
+        <!-- Define groups in Jinja -->
+        {% set resp_list = ['cough', 'dry_cough', 'chronic_cough', 'shortness_of_breath', 'wheezing', 'sputum_production', 'chest_tightness', 'rapid_breathing', 'shallow_breathing', 'hoarseness', 'throat_irritation', 'nasal_congestion', 'lung_crackles'] %}
+        {% set sev_list = ['chest_pain', 'blood_in_sputum_(hemoptysis)', 'bluish_lips', 'pink_frothy_sputum', 'difficulty_breathing_during_activity', 'confusion_(in_elderly)', 'fainting_(syncope)', 'barrel_chest', 'clubbing_of_fingers', 'swelling_in_legs', 'hiccups', 'bone_pain', 'loss_of_taste/smell', 'eye_pain/redness'] %}
+        
+        {% set grp_resp = [] %}
+        {% set grp_sev = [] %}
+        {% set grp_gen = [] %}
+        
+        {% set ignore_list = ['age', 'gender', 'smoking_history', 'previous_lung_disease', 'environmental_exposure'] %}
+        {% for s in symptoms %}
+            {% if s not in ignore_list %}
+                {% if s in resp_list %}
+                    {% set _ = grp_resp.append(s) %}
+                {% elif s in sev_list %}
+                    {% set _ = grp_sev.append(s) %}
+                {% else %}
+                    {% set _ = grp_gen.append(s) %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="accordion mb-5" id="symptomsAccordion">
+            
+            <!-- Respiratory -->
+            <div class="accordion-item border-0 mb-3 shadow-sm rounded-4 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResp">
+                        <div class="section-icon icon-resp"><i class="fa-solid fa-lungs"></i></div>
+                        Respiratory Symptoms
+                    </button>
+                </h2>
+                <div id="collapseResp" class="accordion-collapse collapse show" data-bs-parent="#symptomsAccordion">
+                    <div class="accordion-body bg-light">
+                        <div class="row g-3 symptom-container">
+                            {% for symptom in grp_resp %}
+                            <div class="col-md-6 col-lg-4 symptom-item" data-id="{{ symptom }}">
+                                <div class="symptom-card-container border rounded-4 p-3 bg-white h-100 shadow-sm transition-all" id="container-{{ symptom }}">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="symptom-label fw-bold m-0 flex-grow-1" for="check-{{ symptom }}" style="cursor: pointer;">{{ symptom.replace('_',' ').title() }}</label>
+                                        <div class="form-check form-switch m-0 ms-2">
+                                            <input class="form-check-input shadow-none ms-0" type="checkbox" id="check-{{ symptom }}" onchange="toggleSeverity('{{ symptom }}')" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                                        </div>
+                                    </div>
+                                    <div id="severity-{{ symptom }}" class="severity-options mt-3" style="display: none;">
+                                        <div class="btn-group w-100 shadow-sm rounded-pill overflow-hidden" role="group">
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mild" value="mild" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-success btn-sm border-0 py-2" for="{{ symptom }}-mild">Mild</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mod" value="moderate" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-warning btn-sm border-0 py-2" for="{{ symptom }}-mod">Mod</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-sev" value="severe" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-danger btn-sm border-0 py-2" for="{{ symptom }}-sev">Severe</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General -->
+            <div class="accordion-item border-0 mb-3 shadow-sm rounded-4 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGen">
+                        <div class="section-icon icon-gen"><i class="fa-solid fa-thermometer"></i></div>
+                        General / Systemic Symptoms
+                    </button>
+                </h2>
+                <div id="collapseGen" class="accordion-collapse collapse" data-bs-parent="#symptomsAccordion">
+                    <div class="accordion-body bg-light">
+                        <div class="row g-3 symptom-container">
+                            {% for symptom in grp_gen %}
+                            <div class="col-md-6 col-lg-4 symptom-item" data-id="{{ symptom }}">
+                                <div class="symptom-card-container border rounded-4 p-3 bg-white h-100 shadow-sm transition-all" id="container-{{ symptom }}">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="symptom-label fw-bold m-0 flex-grow-1" for="check-{{ symptom }}" style="cursor: pointer;">{{ symptom.replace('_',' ').title() }}</label>
+                                        <div class="form-check form-switch m-0 ms-2">
+                                            <input class="form-check-input shadow-none ms-0" type="checkbox" id="check-{{ symptom }}" onchange="toggleSeverity('{{ symptom }}')" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                                        </div>
+                                    </div>
+                                    <div id="severity-{{ symptom }}" class="severity-options mt-3" style="display: none;">
+                                        <div class="btn-group w-100 shadow-sm rounded-pill overflow-hidden" role="group">
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mild" value="mild" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-success btn-sm border-0 py-2" for="{{ symptom }}-mild">Mild</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mod" value="moderate" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-warning btn-sm border-0 py-2" for="{{ symptom }}-mod">Mod</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-sev" value="severe" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-danger btn-sm border-0 py-2" for="{{ symptom }}-sev">Severe</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Severe -->
+            <div class="accordion-item border-0 shadow-sm rounded-4 overflow-hidden">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSev">
+                        <div class="section-icon icon-sev"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        Severe / Critical Symptoms
+                    </button>
+                </h2>
+                <div id="collapseSev" class="accordion-collapse collapse" data-bs-parent="#symptomsAccordion">
+                    <div class="accordion-body bg-light">
+                        <div class="row g-3 symptom-container">
+                            {% for symptom in grp_sev %}
+                            <div class="col-md-6 col-lg-4 symptom-item" data-id="{{ symptom }}">
+                                <div class="symptom-card-container border rounded-4 p-3 bg-white h-100 shadow-sm transition-all" id="container-{{ symptom }}">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="symptom-label fw-bold m-0 flex-grow-1" for="check-{{ symptom }}" style="cursor: pointer;">{{ symptom.replace('_',' ').title() }}</label>
+                                        <div class="form-check form-switch m-0 ms-2">
+                                            <input class="form-check-input shadow-none ms-0" type="checkbox" id="check-{{ symptom }}" onchange="toggleSeverity('{{ symptom }}')" style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                                        </div>
+                                    </div>
+                                    <div id="severity-{{ symptom }}" class="severity-options mt-3" style="display: none;">
+                                        <div class="btn-group w-100 shadow-sm rounded-pill overflow-hidden" role="group">
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mild" value="mild" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-success btn-sm border-0 py-2" for="{{ symptom }}-mild">Mild</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-mod" value="moderate" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-warning btn-sm border-0 py-2" for="{{ symptom }}-mod">Mod</label>
+
+                                            <input type="radio" class="btn-check" name="{{ symptom }}" id="{{ symptom }}-sev" value="severe" autocomplete="off" disabled>
+                                            <label class="btn btn-outline-danger btn-sm border-0 py-2" for="{{ symptom }}-sev">Severe</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Cough Sound Analysis Engine -->
+        <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2 mt-5">3. Cough Sound Analysis (Optional AI Diagnostics)</h5>
+        <div class="row mb-5 g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 bg-light">
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-4">
+                            <i class="fa-solid fa-microphone-lines text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h6 class="fw-bold">Record Your Cough for AI Evaluation</h6>
+                        <p class="text-muted small mb-4">You can optionally record 3-5 seconds of your cough to let our audio AI classify the sound pattern.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+                            <button type="button" id="btn-record" class="btn btn-outline-danger shadow-sm rounded-pill px-4">
+                                <i class="fa-solid fa-microphone me-2"></i>Record Cough
+                            </button>
+                            <button type="button" id="btn-stop" class="btn btn-secondary shadow-sm rounded-pill px-4" disabled>
+                                <i class="fa-solid fa-stop me-2"></i>Stop
+                            </button>
+                            <button type="button" class="btn btn-outline-primary shadow-sm rounded-pill px-4" onclick="document.getElementById('audio-upload').click()">
+                                <i class="fa-solid fa-file-arrow-up me-2"></i>Upload Audio
+                            </button>
+                            <input type="file" id="audio-upload" class="d-none" accept="audio/*">
+                        </div>
+                        
+                        <div id="cough-status" class="text-muted fw-semibold small mb-2" style="min-height: 20px;"></div>
+                        
+                        <!-- audio element hidden -->
+                        <audio id="audio-playback" controls class="mx-auto d-none mb-4 w-100" style="max-width: 400px;"></audio>
+                        
+                        <button type="button" id="btn-analyze" class="btn btn-primary-custom d-none mx-auto rounded-pill px-5">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i>Analyze Audio
+                        </button>
+                        
+                        <div id="cough-results" class="mt-4 text-start d-none bg-white p-3 border rounded-3 text-start mx-auto shadow-sm" style="max-width: 500px;">
+                            <h6 class="fw-bold border-bottom pb-2 text-primary"><i class="fa-solid fa-file-waveform me-2"></i>Cough Analysis Result</h6>
+                            <p class="mb-1"><strong class="text-secondary">Detected Type:</strong> <span id="res-type" class="fw-bold text-dark"></span></p>
+                            <p class="mb-1"><strong class="text-secondary">Confidence:</strong> <span id="res-conf" class="badge bg-primary"></span></p>
+                            <p class="mb-0"><strong class="text-secondary">Correlated Conditions:</strong> <span id="res-cond" class="small text-muted"></span></p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 col-md-8 mx-auto mt-4">
+            <button type="submit" class="btn btn-primary-custom btn-lg shadow-lg">
+                <i class="fa-solid fa-microscope text-white"></i> Process Full Clinical Assessment
+            </button>
+        </div>
+
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if(document.getElementById('loading-animation')) {
+        setTimeout(function() {
+            document.getElementById('loading-animation').classList.add('d-none');
+            const resView = document.getElementById('results-view');
+            resView.classList.remove('d-none');
+            resView.classList.add('fade-in');
+        }, 1500);
+    }
+});
+
+// Cough Audio Recorder Logic
+document.addEventListener('DOMContentLoaded', function() {
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioBlob;
+    
+    const btnRecord = document.getElementById('btn-record');
+    const btnStop = document.getElementById('btn-stop');
+    const btnAnalyze = document.getElementById('btn-analyze');
+    const audioPlayback = document.getElementById('audio-playback');
+    const statusText = document.getElementById('cough-status');
+    const resultsDiv = document.getElementById('cough-results');
+    
+    if (btnRecord && btnStop) {
+        btnRecord.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                audioChunks = [];
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPlayback.src = audioUrl;
+                    
+                    audioPlayback.classList.remove('d-none');
+                    btnAnalyze.classList.remove('d-none');
+                    statusText.innerHTML = '<span class="text-success"><i class="fa-solid fa-check-circle me-1"></i>Recording captured successfully.</span>';
+                };
+                
+                mediaRecorder.start();
+                btnRecord.disabled = true;
+                btnStop.disabled = false;
+                btnAnalyze.classList.add('d-none');
+                resultsDiv.classList.add('d-none');
+                statusText.innerHTML = '<span class="text-danger blink"><i class="fa-solid fa-microphone me-1"></i>Recording... (Cough now)</span>';
+            } catch (err) {
+                statusText.innerHTML = '<span class="text-danger">Microphone access denied or not available.</span>';
+                console.error("Audio access error:", err);
+            }
+        });
+        
+        btnStop.addEventListener('click', () => {
+            mediaRecorder.stop();
+            btnRecord.disabled = false;
+            btnStop.disabled = true;
+        });
+
+        const audioUploadInput = document.getElementById('audio-upload');
+        if (audioUploadInput) {
+            audioUploadInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    audioBlob = file;
+                    const audioUrl = URL.createObjectURL(file);
+                    audioPlayback.src = audioUrl;
+                    
+                    audioPlayback.classList.remove('d-none');
+                    btnAnalyze.classList.remove('d-none');
+                    resultsDiv.classList.add('d-none');
+                    statusText.innerHTML = '<span class="text-success"><i class="fa-solid fa-file me-1"></i>File uploaded successfully.</span>';
+                }
+            });
+        }
+        
+        btnAnalyze.addEventListener('click', async () => {
+            if (!audioBlob) return;
+            
+            btnAnalyze.disabled = true;
+            statusText.innerHTML = '<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-2"></i>Uploading and Analyzing AI Audio Pattern...</span>';
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'cough.wav');
+            
+            try {
+                const response = await fetch('/analyze_cough', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                btnAnalyze.disabled = false;
+                
+                if (data.error) {
+                    statusText.innerHTML = `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>${data.error}</span>`;
+                } else {
+                    statusText.innerHTML = '<span class="text-success"><i class="fa-solid fa-check-circle me-1"></i>Analysis Complete.</span>';
+                    
+                    document.getElementById('res-type').textContent = data.cough_type;
+                    document.getElementById('res-conf').textContent = data.confidence + '%';
+                    
+                    if (data.possible_conditions && data.possible_conditions.length > 0) {
+                        document.getElementById('res-cond').textContent = data.possible_conditions.join(', ');
+                    } else {
+                        document.getElementById('res-cond').textContent = 'None';
+                    }
+                    
+                    resultsDiv.classList.remove('d-none');
+                }
+                
+            } catch (err) {
+                console.error("Analysis Error:", err);
+                statusText.innerHTML = '<span class="text-danger">Error communicating with analysis server.</span>';
+                btnAnalyze.disabled = false;
+            }
+        });
+    }
+});
+
+// Simple fuzzy search for symptoms
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('symptomSearch');
+    if(searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.symptom-item');
+            
+            // Expand all accordions if searching
+            if(term.length > 0) {
+                document.querySelectorAll('.accordion-collapse').forEach(el => {
+                    let bsCollapse = new bootstrap.Collapse(el, {toggle: false});
+                    bsCollapse.show();
+                });
+            }
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if(text.includes(term)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+
+const bodyRegionsInfo = {
+    head: ['nasal_congestion', 'loss_of_taste/smell', 'eye_pain/redness', 'fever', 'headache'],
+    throat: ['hoarseness', 'throat_irritation', 'dry_cough', 'cough', 'chronic_cough'],
+    chest: ['chest_pain', 'shortness_of_breath', 'wheezing', 'sputum_production', 'chest_tightness', 'rapid_breathing', 'shallow_breathing', 'lung_crackles', 'blood_in_sputum_(hemoptysis)', 'pink_frothy_sputum', 'difficulty_breathing_during_activity', 'barrel_chest'],
+    general: ['fainting_(syncope)', 'confusion_(in_elderly)', 'clubbing_of_fingers', 'swelling_in_legs', 'hiccups', 'bone_pain', 'bluish_lips', 'fatigue', 'weight_loss', 'night_sweats']
+};
+
+function filterSymptoms(region, element) {
+    document.querySelectorAll('.body-region').forEach(el => el.style.border = '2px solid transparent');
+    element.style.border = '2px solid #2563eb';
+    
+    // expand all accordions
+    document.querySelectorAll('.accordion-collapse').forEach(el => {
+        let bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
+        bsCollapse.show();
+    });
+
+    const related = bodyRegionsInfo[region] || [];
+    document.querySelectorAll('.symptom-item').forEach(item => {
+        const sid = item.getAttribute('data-id');
+        if(related.includes(sid)) {
+            item.style.display = 'block';
+            item.querySelector('.symptom-card-container').classList.add('border-primary');
+            item.querySelector('.symptom-card-container').style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.3)';
+        } else {
+            item.style.display = 'none';
+            item.querySelector('.symptom-card-container').classList.remove('border-primary');
+            item.querySelector('.symptom-card-container').style.boxShadow = '';
+        }
+    });
+
+    // scroll to symptoms list
+    document.getElementById('symptomsAccordion').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetSymptomFilter() {
+    document.querySelectorAll('.body-region').forEach(el => el.style.border = '2px solid transparent');
+    document.querySelectorAll('.symptom-item').forEach(item => {
+        item.style.display = 'block';
+        item.querySelector('.symptom-card-container').classList.remove('border-primary');
+        item.querySelector('.symptom-card-container').style.boxShadow = '';
+    });
+}
+
+function toggleSeverity(symptomId) {
+    const isChecked = document.getElementById('check-' + symptomId).checked;
+    const severityDiv = document.getElementById('severity-' + symptomId);
+    const containerDiv = document.getElementById('container-' + symptomId);
+    
+    // Enable/disable the radio buttons
+    const radios = document.querySelectorAll(`input[name="${symptomId}"]`);
+    
+    if (isChecked) {
+        severityDiv.style.display = 'block';
+        containerDiv.classList.add('border-primary');
+        containerDiv.classList.remove('bg-white');
+        containerDiv.classList.add('bg-light');
+        
+        // check "mild" by default if none checked
+        let anyChecked = false;
+        radios.forEach(r => {
+            r.disabled = false;
+            if(r.checked) anyChecked = true;
+        });
+        if(!anyChecked && radios.length > 0) {
+            radios[0].checked = true;
+        }
+    } else {
+        severityDiv.style.display = 'none';
+        containerDiv.classList.remove('border-primary');
+        containerDiv.classList.remove('bg-light');
+        containerDiv.classList.add('bg-white');
+        
+        radios.forEach(r => {
+            r.disabled = true;
+            r.checked = false;
+        });
+    }
+}
+</script>
+{% endblock %}
